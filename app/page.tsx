@@ -1,65 +1,395 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import TerminalLog from './components/TerminalLog';
+import StatsHeader from './components/StatsHeader';
+import ActionInput from './components/ActionInput';
+
+type GameStep = 'buy' | 'feed' | 'plant' | 'processing' | 'gameover';
+
+interface GameState {
+  year: number;
+  population: number;
+  land: number;
+  grain: number;
+  landPrice: number;
+  messages: string[];
+  step: GameStep;
+  buyAcres: number;
+  feedBushels: number;
+  plantAcres: number;
+  startingPopulation: number;
+  originalStartingPopulation: number;
+  totalDeaths: number;
+  previousYearResults: {
+    starvationDeaths: number;
+    newPeople: number;
+    harvestYield: number;
+    ratsAte: number;
+    plagueDeaths: number;
+  } | null;
+}
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+  const [gameState, setGameState] = useState<GameState>({
+    year: 0,
+    population: 100,
+    land: 1000,
+    grain: 2800,
+    landPrice: 0,
+    messages: [],
+    step: 'buy',
+    buyAcres: 0,
+    feedBushels: 0,
+    plantAcres: 0,
+    startingPopulation: 100,
+    originalStartingPopulation: 100,
+    totalDeaths: 0,
+    previousYearResults: null,
+  });
+
+  const addMessage = (message: string) => {
+    setGameState((prev) => ({
+      ...prev,
+      messages: [...prev.messages, message],
+    }));
+  };
+
+  const generateLandPrice = () => {
+    return Math.floor(Math.random() * 10) + 17; // 17-26 bushels per acre
+  };
+
+  const startNewYear = () => {
+    const newLandPrice = generateLandPrice();
+    let stewardReport = '';
+
+    if (gameState.previousYearResults) {
+      const results = gameState.previousYearResults;
+      stewardReport = `Hamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bushels per acre.\nRats ate ${results.ratsAte} bushels.\nLand is trading at ${newLandPrice} bushels per acre.`;
+    }
+
+    setGameState((prev) => ({
+      ...prev,
+      year: prev.year + 1,
+      landPrice: newLandPrice,
+      step: 'buy',
+      buyAcres: 0,
+      feedBushels: 0,
+      plantAcres: 0,
+      startingPopulation: prev.population,
+      messages: stewardReport ? [...prev.messages, stewardReport] : prev.messages,
+      previousYearResults: null,
+    }));
+  };
+
+  const handleBuyAcres = (acres: number) => {
+    const cost = acres * gameState.landPrice;
+    const newGrain = gameState.grain - cost; // If selling (negative acres), cost is negative, so grain increases
+    const newLand = gameState.land + acres;
+
+    setGameState((prev) => ({
+      ...prev,
+      buyAcres: acres,
+      grain: newGrain,
+      land: newLand,
+      step: 'feed',
+      messages: [
+        ...prev.messages,
+        `You ${acres >= 0 ? 'bought' : 'sold'} ${Math.abs(acres)} acres ${acres >= 0 ? 'for' : 'and received'} ${Math.abs(cost)} bushels.`,
+      ],
+    }));
+  };
+
+  const handleFeedPopulation = (bushels: number) => {
+    setGameState((prev) => ({
+      ...prev,
+      feedBushels: bushels,
+      grain: prev.grain - bushels,
+      step: 'plant',
+      messages: [
+        ...prev.messages,
+        `You fed the population ${bushels} bushels.`,
+      ],
+    }));
+  };
+
+  const handlePlantAcres = (acres: number) => {
+    const bushelsNeeded = Math.ceil(acres / 2);
+    setGameState((prev) => ({
+      ...prev,
+      plantAcres: acres,
+      grain: prev.grain - bushelsNeeded,
+      step: 'processing',
+      messages: [
+        ...prev.messages,
+        `You planted ${acres} acres with ${bushelsNeeded} bushels of seed.`,
+      ],
+    }));
+  };
+
+  const processYearEnd = () => {
+    setGameState((prev) => {
+      let newGrain = prev.grain;
+      let newPopulation = prev.population;
+      let starvationDeaths = 0;
+      let plagueDeaths = 0;
+      let harvestYield = 0;
+      let ratsAte = 0;
+      const messages: string[] = [];
+
+      // Calculate harvest FIRST (before rats)
+      if (prev.plantAcres > 0) {
+        harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bushels per acre
+        const harvest = prev.plantAcres * harvestYield;
+        newGrain += harvest;
+        messages.push(`\nHarvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.`);
+      }
+
+      // Rats (10-30% chance to eat 10-20% of stored grain)
+      const ratChance = Math.random();
+      if (ratChance <= 0.30) {
+        const percentEaten = (Math.random() * 0.1 + 0.1); // 10-20%
+        ratsAte = Math.floor(newGrain * percentEaten);
+        newGrain -= ratsAte;
+        messages.push(`Rats ate ${ratsAte} bushels (${(percentEaten * 100).toFixed(1)}% of your grain).`);
+      }
+
+      // Calculate starvation
+      const peopleFed = Math.floor(prev.feedBushels / 20);
+      if (peopleFed < prev.population) {
+        starvationDeaths = prev.population - peopleFed;
+        newPopulation = prev.population - starvationDeaths;
+        const deathPercentage = (starvationDeaths / prev.population) * 100;
+        
+        messages.push(`\n${starvationDeaths} people died of starvation.`);
+        
+        if (deathPercentage > 45) {
+          messages.push(`\nYou have been impeached and thrown out of office!`);
+          messages.push(`You starved ${deathPercentage.toFixed(1)}% of the population in one year.`);
+          return {
+            ...prev,
+            population: newPopulation,
+            messages: [...prev.messages, ...messages],
+            step: 'gameover',
+            totalDeaths: prev.totalDeaths + starvationDeaths,
+            previousYearResults: null,
+          };
+        }
+      } else {
+        messages.push(`\nEveryone was fed.`);
+      }
+
+      // Plague (15% chance) - happens after starvation
+      const plagueChance = Math.random();
+      if (plagueChance <= 0.15) {
+        plagueDeaths = Math.floor(newPopulation / 2);
+        newPopulation -= plagueDeaths;
+        messages.push(`\nA horrible plague struck! Half the population died.`);
+        messages.push(`${plagueDeaths} people died from the plague.`);
+      }
+
+      // New people arrive (simplified: 5-15 new people per year)
+      const newPeople = Math.floor(Math.random() * 11) + 5;
+      newPopulation += newPeople;
+
+      const totalDeathsThisYear = starvationDeaths + plagueDeaths;
+
+      // Check if game is over (10 years completed)
+      if (prev.year >= 10) {
+        const landPerPerson = prev.land / newPopulation;
+        const finalPopulation = newPopulation;
+        const survivalRate = ((prev.originalStartingPopulation - (prev.totalDeaths + totalDeathsThisYear)) / prev.originalStartingPopulation) * 100;
+        
+        let rating = '';
+        if (landPerPerson >= 10 && survivalRate >= 90) {
+          rating = 'EXCELLENT';
+        } else if (landPerPerson >= 7 && survivalRate >= 75) {
+          rating = 'GOOD';
+        } else if (landPerPerson >= 5 && survivalRate >= 60) {
+          rating = 'FAIR';
+        } else {
+          rating = 'POOR';
+        }
+
+        messages.push(`\n=== GAME OVER ===`);
+        messages.push(`Final Statistics:`);
+        messages.push(`Land per person: ${landPerPerson.toFixed(2)} acres`);
+        messages.push(`Survival rate: ${survivalRate.toFixed(1)}%`);
+        messages.push(`Performance rating: ${rating}`);
+
+        return {
+          ...prev,
+          population: newPopulation,
+          grain: newGrain,
+          messages: [...prev.messages, ...messages],
+          step: 'gameover',
+          totalDeaths: prev.totalDeaths + totalDeathsThisYear,
+          previousYearResults: null,
+        };
+      }
+
+      // Store results for next year's steward report
+      return {
+        ...prev,
+        population: newPopulation,
+        grain: newGrain,
+        messages: [...prev.messages, ...messages],
+        step: 'buy',
+        totalDeaths: prev.totalDeaths + totalDeathsThisYear,
+        previousYearResults: {
+          starvationDeaths,
+          newPeople,
+          harvestYield,
+          ratsAte,
+          plagueDeaths,
+        },
+      };
+    });
+  };
+
+  useEffect(() => {
+    if (gameState.year === 0) {
+      const initialPrice = generateLandPrice();
+      const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou are the ruler of a city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nStarting conditions:\n- Population: ${gameState.population}\n- Land: ${gameState.land} acres\n- Grain: ${gameState.grain} bushels\n- Land price: ${initialPrice} bushels per acre\n\nMake your decisions carefully!\n`;
+      const firstYearReport = `Hamurabi: I beg to report to you,\nIn year 1, 0 people starved,\n0 came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was 0 bushels per acre.\nRats ate 0 bushels.\nLand is trading at ${initialPrice} bushels per acre.`;
+      setGameState((prev) => ({
+        ...prev,
+        year: 1,
+        landPrice: initialPrice,
+        messages: [welcomeMessage, firstYearReport],
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (gameState.step === 'processing') {
+      const timer = setTimeout(() => {
+        processYearEnd();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    
+    // After processing, if we have previous year results and haven't finished 10 years, show steward report and start new year
+    if (gameState.step === 'buy' && gameState.previousYearResults && gameState.year <= 10) {
+      const timer = setTimeout(() => {
+        startNewYear();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.step, gameState.previousYearResults, gameState.year]);
+
+  const getMaxBuyAcres = () => {
+    if (gameState.landPrice === 0) return 0;
+    return Math.floor(gameState.grain / gameState.landPrice);
+  };
+
+  const getMaxSellAcres = () => {
+    return gameState.land;
+  };
+
+  const getMaxFeedBushels = () => {
+    return gameState.grain;
+  };
+
+  const getMaxPlantAcres = () => {
+    const grainLimit = gameState.grain * 2; // 1 bushel per 2 acres
+    const peopleLimit = gameState.population * 10; // 1 person per 10 acres
+    return Math.min(gameState.land, grainLimit, peopleLimit);
+  };
+
+  const renderInput = () => {
+    if (gameState.step === 'gameover') {
+      return (
+        <div className="border-t border-white p-4 font-mono text-center">
+          <button
+            onClick={() => {
+              setGameState({
+                year: 0,
+                population: 100,
+                land: 1000,
+                grain: 2800,
+                landPrice: 0,
+                messages: [],
+                step: 'buy',
+                buyAcres: 0,
+                feedBushels: 0,
+                plantAcres: 0,
+                startingPopulation: 100,
+                originalStartingPopulation: 100,
+                totalDeaths: 0,
+                previousYearResults: null,
+              });
+            }}
+            className="bg-white text-black px-6 py-3 hover:bg-white/90 transition-colors"
+          >
+            Play Again
+          </button>
+        </div>
+      );
+    }
+
+    if (gameState.step === 'processing') {
+      return (
+        <div className="border-t border-white p-4 font-mono text-center text-white/70">
+          Processing year end...
+        </div>
+      );
+    }
+
+    if (gameState.step === 'buy') {
+      return (
+        <ActionInput
+          step="buy"
+          maxValue={gameState.grain}
+          constraints={{
+            maxAcres: getMaxSellAcres(),
+            maxBushels: gameState.landPrice,
+          }}
+          onSubmit={handleBuyAcres}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      );
+    }
+
+    if (gameState.step === 'feed') {
+      return (
+        <ActionInput
+          step="feed"
+          maxValue={getMaxFeedBushels()}
+          onSubmit={handleFeedPopulation}
+        />
+      );
+    }
+
+    if (gameState.step === 'plant') {
+      return (
+        <ActionInput
+          step="plant"
+          maxValue={getMaxPlantAcres()}
+          constraints={{
+            maxBushels: gameState.grain,
+            peopleAvailable: gameState.population,
+          }}
+          onSubmit={handlePlantAcres}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center p-0 md:p-4">
+      <div className="w-full h-screen md:w-full md:max-w-3xl md:h-auto md:max-h-[90vh] bg-black border border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] flex flex-col font-mono">
+        {/* <StatsHeader
+          year={gameState.year}
+          population={gameState.population}
+          land={gameState.land}
+          grain={gameState.grain}
+          landPrice={gameState.landPrice}
+        /> */}
+        <TerminalLog messages={gameState.messages} />
+        {renderInput()}
+      </div>
     </div>
   );
 }
