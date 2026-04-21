@@ -408,17 +408,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-0 md:p-4">
       <div className="w-full h-screen md:w-full md:max-w-3xl md:h-auto md:max-h-[90vh] bg-black border border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] flex flex-col font-mono">
-        <StatsHeader
+        {/* <StatsHeader
           year={gameState.year}
           population={gameState.population}
           land={gameState.land}
           rice={gameState.rice}
           landPrice={gameState.landPrice}
-        />
+        /> */}
         <TerminalLog messages={gameState.messages} />
         {renderInput()}
         <div className="p-2 text-[10px] text-white/70 text-center font-mono uppercase tracking-widest border-t border-white/10">
-          {gameState.population === 0 ? "welldone 💀. -Muhammed" : "Try not to kill everyone 🤞. -Muhammed"}
+          {gameState.population === 0
+            ? "welldone 💀. -Muhammed"
+            : "Try not to kill everyone 🤞. -Muhammed"}
         </div>
       </div>
     </div>
