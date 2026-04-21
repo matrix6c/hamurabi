@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface StatsHeaderProps {
   year: number;
@@ -20,26 +20,27 @@ export default function StatsHeader({
       <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-5">
         <div>
           <div className="text-white/70">Year</div>
-          <div className="text-white text-lg font-bold">{year}/10</div>
+          <div className="text-white text-md font-bold">{year}/10</div>
         </div>
         <div>
           <div className="text-white/70">Population</div>
-          <div className="text-white text-lg font-bold">{population}</div>
+          <div className="text-white text-md font-bold">{population}</div>
         </div>
         <div>
           <div className="text-white/70">Land (acres)</div>
-          <div className="text-white text-lg font-bold">{land}</div>
+          <div className="text-white text-md font-bold">{land}</div>
         </div>
         <div>
           <div className="text-white/70">Grain (bushels)</div>
-          <div className="text-white text-lg font-bold">{grain}</div>
+          <div className="text-white text-md font-bold">{grain}</div>
         </div>
         <div>
           <div className="text-white/70">Land Price</div>
-          <div className="text-white text-lg font-bold">{landPrice} bushels/acre</div>
+          <div className="text-white text-md font-bold">
+            {landPrice} bushels/acre
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

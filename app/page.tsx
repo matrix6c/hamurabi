@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import TerminalLog from './components/TerminalLog';
-import StatsHeader from './components/StatsHeader';
-import ActionInput from './components/ActionInput';
+import { useState, useEffect } from "react";
+import TerminalLog from "./components/TerminalLog";
+import StatsHeader from "./components/StatsHeader";
+import ActionInput from "./components/ActionInput";
 
-type GameStep = 'buy' | 'feed' | 'plant' | 'processing' | 'gameover';
+type GameStep = "buy" | "feed" | "plant" | "processing" | "gameover";
 
 interface GameState {
   year: number;
@@ -38,7 +38,7 @@ export default function Home() {
     grain: 2800,
     landPrice: 0,
     messages: [],
-    step: 'buy',
+    step: "buy",
     buyAcres: 0,
     feedBushels: 0,
     plantAcres: 0,
@@ -59,25 +59,50 @@ export default function Home() {
     return Math.floor(Math.random() * 10) + 17; // 17-26 bushels per acre
   };
 
+  const initializeGame = () => {
+    const initialPrice = generateLandPrice();
+    const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou are the ruler of a city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nMake your decisions carefully!\n`;
+    const firstYearReport = `Hamurabi: I beg to report to you,\nIn year 1, 0 people starved,\n0 came to the city.\nPopulation is now 100.\nThe city now owns 1000 acres.\nHarvest was 0 bushels per acre.\nRats ate 0 bushels.\nLand is trading at ${initialPrice} bushels per acre.`;
+
+    setGameState({
+      year: 1,
+      population: 100,
+      land: 1000,
+      grain: 2800,
+      landPrice: initialPrice,
+      messages: [welcomeMessage, firstYearReport],
+      step: "buy",
+      buyAcres: 0,
+      feedBushels: 0,
+      plantAcres: 0,
+      startingPopulation: 100,
+      originalStartingPopulation: 100,
+      totalDeaths: 0,
+      previousYearResults: null,
+    });
+  };
+
   const startNewYear = () => {
     const newLandPrice = generateLandPrice();
-    let stewardReport = '';
+    let stewardReport = "";
 
     if (gameState.previousYearResults) {
       const results = gameState.previousYearResults;
-      stewardReport = `Hamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bushels per acre.\nRats ate ${results.ratsAte} bushels.\nLand is trading at ${newLandPrice} bushels per acre.`;
+      stewardReport = `\nHamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bushels per acre.\nRats ate ${results.ratsAte} bushels.\nLand is trading at ${newLandPrice} bushels per acre.`;
     }
 
     setGameState((prev) => ({
       ...prev,
       year: prev.year + 1,
       landPrice: newLandPrice,
-      step: 'buy',
+      step: "buy",
       buyAcres: 0,
       feedBushels: 0,
       plantAcres: 0,
       startingPopulation: prev.population,
-      messages: stewardReport ? [...prev.messages, stewardReport] : prev.messages,
+      messages: stewardReport
+        ? [...prev.messages, stewardReport]
+        : prev.messages,
       previousYearResults: null,
     }));
   };
@@ -92,10 +117,10 @@ export default function Home() {
       buyAcres: acres,
       grain: newGrain,
       land: newLand,
-      step: 'feed',
+      step: "feed",
       messages: [
         ...prev.messages,
-        `You ${acres >= 0 ? 'bought' : 'sold'} ${Math.abs(acres)} acres ${acres >= 0 ? 'for' : 'and received'} ${Math.abs(cost)} bushels.`,
+        `\n/ ******************************************* /\n> You ${acres >= 0 ? "bought" : "sold"} [#blue:${Math.abs(acres)}] acres ${acres >= 0 ? "for" : "and received"} [#blue:${Math.abs(cost)}] bushels.`,
       ],
     }));
   };
@@ -105,10 +130,10 @@ export default function Home() {
       ...prev,
       feedBushels: bushels,
       grain: prev.grain - bushels,
-      step: 'plant',
+      step: "plant",
       messages: [
         ...prev.messages,
-        `You fed the population ${bushels} bushels.`,
+        `> You fed the population [#amber:${bushels}] bushels.`,
       ],
     }));
   };
@@ -119,10 +144,10 @@ export default function Home() {
       ...prev,
       plantAcres: acres,
       grain: prev.grain - bushelsNeeded,
-      step: 'processing',
+      step: "processing",
       messages: [
         ...prev.messages,
-        `You planted ${acres} acres with ${bushelsNeeded} bushels of seed.`,
+        `> You planted [#emerald:${acres}] acres with [#emerald:${bushelsNeeded}] bushels of seed. \n/ ******************************************* /`,
       ],
     }));
   };
@@ -138,46 +163,50 @@ export default function Home() {
       const messages: string[] = [];
 
       // Calculate harvest FIRST (before rats)
-      if (prev.plantAcres > 0) {
-        harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bushels per acre
-        const harvest = prev.plantAcres * harvestYield;
-        newGrain += harvest;
-        messages.push(`\nHarvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.`);
-      }
+      // if (prev.plantAcres > 0) {
+      //   harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bushels per acre
+      //   const harvest = prev.plantAcres * harvestYield;
+      //   newGrain += harvest;
+      //   messages.push(`\nHarvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.`);
+      // }
 
       // Rats (10-30% chance to eat 10-20% of stored grain)
       const ratChance = Math.random();
-      if (ratChance <= 0.30) {
-        const percentEaten = (Math.random() * 0.1 + 0.1); // 10-20%
+      if (ratChance <= 0.3) {
+        const percentEaten = Math.random() * 0.1 + 0.1; // 10-20%
         ratsAte = Math.floor(newGrain * percentEaten);
         newGrain -= ratsAte;
-        messages.push(`Rats ate ${ratsAte} bushels (${(percentEaten * 100).toFixed(1)}% of your grain).`);
+        messages.push(
+          `Rats ate ${ratsAte} bushels (${(percentEaten * 100).toFixed(1)}% of your grain).`,
+        );
       }
 
-      // Calculate starvation
-      const peopleFed = Math.floor(prev.feedBushels / 20);
-      if (peopleFed < prev.population) {
-        starvationDeaths = prev.population - peopleFed;
-        newPopulation = prev.population - starvationDeaths;
-        const deathPercentage = (starvationDeaths / prev.population) * 100;
-        
-        messages.push(`\n${starvationDeaths} people died of starvation.`);
-        
-        if (deathPercentage > 45) {
-          messages.push(`\nYou have been impeached and thrown out of office!`);
-          messages.push(`You starved ${deathPercentage.toFixed(1)}% of the population in one year.`);
-          return {
-            ...prev,
-            population: newPopulation,
-            messages: [...prev.messages, ...messages],
-            step: 'gameover',
-            totalDeaths: prev.totalDeaths + starvationDeaths,
-            previousYearResults: null,
-          };
-        }
-      } else {
-        messages.push(`\nEveryone was fed.`);
-      }
+      // // Calculate starvation
+      // const peopleFed = Math.floor(prev.feedBushels / 20);
+      // if (peopleFed < prev.population) {
+      //   starvationDeaths = prev.population - peopleFed;
+      //   newPopulation = prev.population - starvationDeaths;
+      //   const deathPercentage = (starvationDeaths / prev.population) * 100;
+
+      //   messages.push(`${starvationDeaths} people died of starvation.`);
+
+      //   if (deathPercentage > 45) {
+      //     messages.push(`\nYou have been impeached and thrown out of office!`);
+      //     messages.push(
+      //       `You starved ${deathPercentage.toFixed(1)}% of the population in one year.`,
+      //     );
+      //     return {
+      //       ...prev,
+      //       population: newPopulation,
+      //       messages: [...prev.messages, ...messages],
+      //       step: "gameover",
+      //       totalDeaths: prev.totalDeaths + starvationDeaths,
+      //       previousYearResults: null,
+      //     };
+      //   }
+      // } else {
+      //   messages.push(`\n> Everyone was fed.`);
+      // }
 
       // Plague (15% chance) - happens after starvation
       const plagueChance = Math.random();
@@ -198,17 +227,21 @@ export default function Home() {
       if (prev.year >= 10) {
         const landPerPerson = prev.land / newPopulation;
         const finalPopulation = newPopulation;
-        const survivalRate = ((prev.originalStartingPopulation - (prev.totalDeaths + totalDeathsThisYear)) / prev.originalStartingPopulation) * 100;
-        
-        let rating = '';
+        const survivalRate =
+          ((prev.originalStartingPopulation -
+            (prev.totalDeaths + totalDeathsThisYear)) /
+            prev.originalStartingPopulation) *
+          100;
+
+        let rating = "";
         if (landPerPerson >= 10 && survivalRate >= 90) {
-          rating = 'EXCELLENT';
+          rating = "EXCELLENT";
         } else if (landPerPerson >= 7 && survivalRate >= 75) {
-          rating = 'GOOD';
+          rating = "GOOD";
         } else if (landPerPerson >= 5 && survivalRate >= 60) {
-          rating = 'FAIR';
+          rating = "FAIR";
         } else {
-          rating = 'POOR';
+          rating = "POOR";
         }
 
         messages.push(`\n=== GAME OVER ===`);
@@ -222,7 +255,7 @@ export default function Home() {
           population: newPopulation,
           grain: newGrain,
           messages: [...prev.messages, ...messages],
-          step: 'gameover',
+          step: "gameover",
           totalDeaths: prev.totalDeaths + totalDeathsThisYear,
           previousYearResults: null,
         };
@@ -234,7 +267,7 @@ export default function Home() {
         population: newPopulation,
         grain: newGrain,
         messages: [...prev.messages, ...messages],
-        step: 'buy',
+        step: "buy",
         totalDeaths: prev.totalDeaths + totalDeathsThisYear,
         previousYearResults: {
           starvationDeaths,
@@ -249,28 +282,24 @@ export default function Home() {
 
   useEffect(() => {
     if (gameState.year === 0) {
-      const initialPrice = generateLandPrice();
-      const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou are the ruler of a city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nStarting conditions:\n- Population: ${gameState.population}\n- Land: ${gameState.land} acres\n- Grain: ${gameState.grain} bushels\n- Land price: ${initialPrice} bushels per acre\n\nMake your decisions carefully!\n`;
-      const firstYearReport = `Hamurabi: I beg to report to you,\nIn year 1, 0 people starved,\n0 came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was 0 bushels per acre.\nRats ate 0 bushels.\nLand is trading at ${initialPrice} bushels per acre.`;
-      setGameState((prev) => ({
-        ...prev,
-        year: 1,
-        landPrice: initialPrice,
-        messages: [welcomeMessage, firstYearReport],
-      }));
+      initializeGame();
     }
-  }, []);
+  }, [gameState.year]);
 
   useEffect(() => {
-    if (gameState.step === 'processing') {
+    if (gameState.step === "processing") {
       const timer = setTimeout(() => {
         processYearEnd();
       }, 500);
       return () => clearTimeout(timer);
     }
-    
+
     // After processing, if we have previous year results and haven't finished 10 years, show steward report and start new year
-    if (gameState.step === 'buy' && gameState.previousYearResults && gameState.year <= 10) {
+    if (
+      gameState.step === "buy" &&
+      gameState.previousYearResults &&
+      gameState.year <= 10
+    ) {
       const timer = setTimeout(() => {
         startNewYear();
       }, 1000);
@@ -298,27 +327,12 @@ export default function Home() {
   };
 
   const renderInput = () => {
-    if (gameState.step === 'gameover') {
+    if (gameState.step === "gameover") {
       return (
         <div className="border-t border-white p-4 font-mono text-center">
           <button
             onClick={() => {
-              setGameState({
-                year: 0,
-                population: 100,
-                land: 1000,
-                grain: 2800,
-                landPrice: 0,
-                messages: [],
-                step: 'buy',
-                buyAcres: 0,
-                feedBushels: 0,
-                plantAcres: 0,
-                startingPopulation: 100,
-                originalStartingPopulation: 100,
-                totalDeaths: 0,
-                previousYearResults: null,
-              });
+              initializeGame();
             }}
             className="bg-white text-black px-6 py-3 hover:bg-white/90 transition-colors"
           >
@@ -328,7 +342,7 @@ export default function Home() {
       );
     }
 
-    if (gameState.step === 'processing') {
+    if (gameState.step === "processing") {
       return (
         <div className="border-t border-white p-4 font-mono text-center text-white/70">
           Processing year end...
@@ -336,7 +350,7 @@ export default function Home() {
       );
     }
 
-    if (gameState.step === 'buy') {
+    if (gameState.step === "buy") {
       return (
         <ActionInput
           step="buy"
@@ -350,7 +364,7 @@ export default function Home() {
       );
     }
 
-    if (gameState.step === 'feed') {
+    if (gameState.step === "feed") {
       return (
         <ActionInput
           step="feed"
@@ -360,7 +374,7 @@ export default function Home() {
       );
     }
 
-    if (gameState.step === 'plant') {
+    if (gameState.step === "plant") {
       return (
         <ActionInput
           step="plant"
@@ -380,13 +394,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-0 md:p-4">
       <div className="w-full h-screen md:w-full md:max-w-3xl md:h-auto md:max-h-[90vh] bg-black border border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] flex flex-col font-mono">
-        {/* <StatsHeader
+        <StatsHeader
           year={gameState.year}
           population={gameState.population}
           land={gameState.land}
           grain={gameState.grain}
           landPrice={gameState.landPrice}
-        /> */}
+        />
         <TerminalLog messages={gameState.messages} />
         {renderInput()}
       </div>
