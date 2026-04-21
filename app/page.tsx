@@ -155,7 +155,7 @@ export default function Home() {
       step: "processing",
       messages: [
         ...prev.messages,
-        `> You planted [#emerald:${acres}] acres with [#emerald:${bagsNeeded}] bags of seed. \n/ ******************************************* /`,
+        `> You planted [#emerald:${acres}] acres with [#emerald:${bagsNeeded}] bags of seed. \n/ *********************** /`,
       ],
     }));
   };
