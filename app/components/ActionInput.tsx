@@ -8,7 +8,7 @@ interface ActionInputProps {
   maxValue: number;
   constraints?: {
     maxAcres?: number;
-    maxBushels?: number;
+    maxBags?: number;
     peopleAvailable?: number;
   };
   onSubmit: (value: number) => void;
@@ -30,7 +30,7 @@ export default function ActionInput({
       case "buy":
         return "Acres to buy (negative to sell)";
       case "feed":
-        return "Bushels to feed the population";
+        return "Bags to feed the population";
       case "plant":
         return "Acres to plant with seed";
     }
@@ -39,9 +39,9 @@ export default function ActionInput({
   const getPlaceholder = () => {
     switch (step) {
       case "buy":
-        return `${maxValue} bushels available`;
+        return `${maxValue} bags available`;
       case "feed":
-        return `${maxValue} bushels available`;
+        return `${maxValue} bags available`;
       case "plant":
         return `${maxValue} acres available`;
     }
@@ -59,10 +59,10 @@ export default function ActionInput({
 
     if (step === "buy") {
       if (numValue > 0) {
-        // Buying land - need to check if we have enough grain
-        const cost = numValue * constraints?.maxBushels!;
+        // Buying land - need to check if we have enough rice
+        const cost = numValue * constraints?.maxBags!;
         if (cost > maxValue) {
-          setError(`Not enough grain. Cost: ${cost}, Available: ${maxValue}`);
+          setError(`Not enough rice. Cost: ${cost}, Available: ${maxValue}`);
           return;
         }
       } else if (numValue < 0) {
@@ -74,11 +74,11 @@ export default function ActionInput({
       }
     } else if (step === "feed") {
       if (numValue < 0) {
-        setError("Cannot feed negative bushels");
+        setError("Cannot feed negative bags");
         return;
       }
       if (numValue > maxValue) {
-        setError(`Not enough grain. Available: ${maxValue}`);
+        setError(`Not enough rice. Available: ${maxValue}`);
         return;
       }
     } else if (step === "plant") {
@@ -90,10 +90,10 @@ export default function ActionInput({
         setError(`Not enough land. Available: ${maxValue}`);
         return;
       }
-      const bushelsNeeded = Math.ceil(numValue / 2);
-      if (bushelsNeeded > constraints?.maxBushels!) {
+      const bagsNeeded = Math.ceil(numValue / 2);
+      if (bagsNeeded > constraints?.maxBags!) {
         setError(
-          `Not enough grain for seed. Need: ${bushelsNeeded}, Available: ${constraints?.maxBushels}`,
+          `Not enough rice for seed. Need: ${bagsNeeded}, Available: ${constraints?.maxBags}`,
         );
         return;
       }

@@ -4,7 +4,7 @@ interface StatsHeaderProps {
   year: number;
   population: number;
   land: number;
-  grain: number;
+  rice: number;
   landPrice: number;
 }
 
@@ -12,7 +12,7 @@ export default function StatsHeader({
   year,
   population,
   land,
-  grain,
+  rice,
   landPrice,
 }: StatsHeaderProps) {
   return (
@@ -31,13 +31,13 @@ export default function StatsHeader({
           <div className="text-white text-md font-bold">{land}</div>
         </div>
         <div>
-          <div className="text-white/70">Grain (bushels)</div>
-          <div className="text-white text-md font-bold">{grain}</div>
+          <div className="text-white/70">Rice (bags)</div>
+          <div className="text-white text-md font-bold">{rice}</div>
         </div>
         <div>
           <div className="text-white/70">Land Price</div>
           <div className="text-white text-md font-bold">
-            {landPrice} bushels/acre
+            {landPrice} bags/acre
           </div>
         </div>
       </div>

@@ -11,12 +11,12 @@ interface GameState {
   year: number;
   population: number;
   land: number;
-  grain: number;
+  rice: number;
   landPrice: number;
   messages: string[];
   step: GameStep;
   buyAcres: number;
-  feedBushels: number;
+  feedBags: number;
   plantAcres: number;
   startingPopulation: number;
   originalStartingPopulation: number;
@@ -35,12 +35,12 @@ export default function Home() {
     year: 0,
     population: 100,
     land: 1000,
-    grain: 2800,
+    rice: 2800,
     landPrice: 0,
     messages: [],
     step: "buy",
     buyAcres: 0,
-    feedBushels: 0,
+    feedBags: 0,
     plantAcres: 0,
     startingPopulation: 100,
     originalStartingPopulation: 100,
@@ -56,25 +56,25 @@ export default function Home() {
   };
 
   const generateLandPrice = () => {
-    return Math.floor(Math.random() * 10) + 17; // 17-26 bushels per acre
+    return Math.floor(Math.random() * 10) + 17; // 17-26 bags per acre
   };
 
   const initializeGame = () => {
     const initialPrice = generateLandPrice();
     const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou have been installed as ruler of this city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nMake your decisions carefully!\n`;
     const yearBanner = `\n[#blue:          -- YEAR 1 --]\n`;
-    const setupMessage = `Land is trading at ${initialPrice} bushels per acre.`;
+    const setupMessage = `Land is trading at ${initialPrice} bags per acre.`;
 
     setGameState({
       year: 1,
       population: 100,
       land: 1000,
-      grain: 2800,
+      rice: 2800,
       landPrice: initialPrice,
       messages: [welcomeMessage, yearBanner, setupMessage],
       step: "buy",
       buyAcres: 0,
-      feedBushels: 0,
+      feedBags: 0,
       plantAcres: 0,
       startingPopulation: 100,
       originalStartingPopulation: 100,
@@ -90,11 +90,11 @@ export default function Home() {
 
     if (gameState.previousYearResults) {
       const results = gameState.previousYearResults;
-      stewardReport = `\nHamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bushels per acre.\nRats ate ${results.ratsAte} bushels.`;
+      stewardReport = `\nHamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bags per acre.\nRats ate ${results.ratsAte} bags.`;
       yearBanner = `\n\n[#blue:          -- YEAR ${gameState.year + 1} --]\n`;
     }
 
-    const priceMessage = `Land is trading at ${newLandPrice} bushels per acre.`;
+    const priceMessage = `Land is trading at ${newLandPrice} bags per acre.`;
 
     setGameState((prev) => ({
       ...prev,
@@ -102,7 +102,7 @@ export default function Home() {
       landPrice: newLandPrice,
       step: "buy",
       buyAcres: 0,
-      feedBushels: 0,
+      feedBags: 0,
       plantAcres: 0,
       startingPopulation: prev.population,
       messages: [
@@ -117,52 +117,52 @@ export default function Home() {
 
   const handleBuyAcres = (acres: number) => {
     const cost = acres * gameState.landPrice;
-    const newGrain = gameState.grain - cost; // If selling (negative acres), cost is negative, so grain increases
+    const newRice = gameState.rice - cost; // If selling (negative acres), cost is negative, so rice increases
     const newLand = gameState.land + acres;
 
     setGameState((prev) => ({
       ...prev,
       buyAcres: acres,
-      grain: newGrain,
+      rice: newRice,
       land: newLand,
       step: "feed",
       messages: [
         ...prev.messages,
-        `\n/ ******************************************* /\n> You ${acres >= 0 ? "bought" : "sold"} [#blue:${Math.abs(acres)}] acres ${acres >= 0 ? "for" : "and received"} [#blue:${Math.abs(cost)}] bushels.`,
+        `\n/ ******************************************* /\n> You ${acres >= 0 ? "bought" : "sold"} [#blue:${Math.abs(acres)}] acres ${acres >= 0 ? "for" : "and received"} [#blue:${Math.abs(cost)}] bags.`,
       ],
     }));
   };
 
-  const handleFeedPopulation = (bushels: number) => {
+  const handleFeedPopulation = (bags: number) => {
     setGameState((prev) => ({
       ...prev,
-      feedBushels: bushels,
-      grain: prev.grain - bushels,
+      feedBags: bags,
+      rice: prev.rice - bags,
       step: "plant",
       messages: [
         ...prev.messages,
-        `> You fed the population [#amber:${bushels}] bushels.`,
+        `> You fed the population [#amber:${bags}] bags.`,
       ],
     }));
   };
 
   const handlePlantAcres = (acres: number) => {
-    const bushelsNeeded = Math.ceil(acres / 2);
+    const bagsNeeded = Math.ceil(acres / 2);
     setGameState((prev) => ({
       ...prev,
       plantAcres: acres,
-      grain: prev.grain - bushelsNeeded,
+      rice: prev.rice - bagsNeeded,
       step: "processing",
       messages: [
         ...prev.messages,
-        `> You planted [#emerald:${acres}] acres with [#emerald:${bushelsNeeded}] bushels of seed. \n/ ******************************************* /`,
+        `> You planted [#emerald:${acres}] acres with [#emerald:${bagsNeeded}] bags of seed. \n/ ******************************************* /`,
       ],
     }));
   };
 
   const processYearEnd = () => {
     setGameState((prev) => {
-      let newGrain = prev.grain;
+      let newRice = prev.rice;
       let newPopulation = prev.population;
       let starvationDeaths = 0;
       let plagueDeaths = 0;
@@ -172,27 +172,27 @@ export default function Home() {
 
       // Calculate harvest FIRST (before rats)
       if (prev.plantAcres > 0) {
-        harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bushels per acre
+        harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bags per acre
         const harvest = prev.plantAcres * harvestYield;
-        newGrain += harvest;
+        newRice += harvest;
         messages.push(
-          `\n[#green:Harvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.]`,
+          `\n[#green:Harvest: ${harvestYield} bags per acre. Total: ${harvest} bags.]`,
         );
       }
 
-      // Rats (10-30% chance to eat 10-20% of stored grain)
+      // Rats (10-30% chance to eat 10-20% of stored rice)
       const ratChance = Math.random();
       if (ratChance <= 0.3) {
         const percentEaten = Math.random() * 0.1 + 0.1; // 10-20%
-        ratsAte = Math.floor(newGrain * percentEaten);
-        newGrain -= ratsAte;
+        ratsAte = Math.floor(newRice * percentEaten);
+        newRice -= ratsAte;
         messages.push(
-          `[#red:Rats ate ${ratsAte} bushels (${(percentEaten * 100).toFixed(1)}% of your grain).]`,
+          `[#red:Rats ate ${ratsAte} bags (${(percentEaten * 100).toFixed(1)}% of your rice).]`,
         );
       }
 
       // Calculate starvation
-      const peopleFed = Math.floor(prev.feedBushels / 20);
+      const peopleFed = Math.floor(prev.feedBags / 20);
       if (peopleFed < prev.population) {
         starvationDeaths = prev.population - peopleFed;
         newPopulation = prev.population - starvationDeaths;
@@ -201,7 +201,9 @@ export default function Home() {
         messages.push(`[#red:${starvationDeaths} people died of starvation.]`);
 
         if (deathPercentage > 45) {
-          messages.push(`\n[#red:You have been impeached and thrown out of office!]`);
+          messages.push(
+            `\n[#red:You have been impeached and thrown out of office!]`,
+          );
           messages.push(
             `[#red:You starved ${deathPercentage.toFixed(1)}% of the population in one year.]`,
           );
@@ -215,7 +217,7 @@ export default function Home() {
           };
         }
       } else {
-        messages.push(`\n> Everyone was fed.`);
+        messages.push(`\n[#green:Everyone was fed.]`);
       }
 
       // Plague (15% chance) - happens after starvation
@@ -223,7 +225,9 @@ export default function Home() {
       if (plagueChance <= 0.15) {
         plagueDeaths = Math.floor(newPopulation / 2);
         newPopulation -= plagueDeaths;
-        messages.push(`\n[#red:A horrible plague struck! Half the population died.]`);
+        messages.push(
+          `\n[#red:A horrible plague struck! Half the population died.]`,
+        );
         messages.push(`[#red:${plagueDeaths} people died from the plague.]`);
       }
 
@@ -263,7 +267,7 @@ export default function Home() {
         return {
           ...prev,
           population: newPopulation,
-          grain: newGrain,
+          rice: newRice,
           messages: [...prev.messages, ...messages],
           step: "gameover",
           totalDeaths: prev.totalDeaths + totalDeathsThisYear,
@@ -275,7 +279,7 @@ export default function Home() {
       return {
         ...prev,
         population: newPopulation,
-        grain: newGrain,
+        rice: newRice,
         messages: [...prev.messages, ...messages],
         step: "buy",
         totalDeaths: prev.totalDeaths + totalDeathsThisYear,
@@ -319,21 +323,21 @@ export default function Home() {
 
   const getMaxBuyAcres = () => {
     if (gameState.landPrice === 0) return 0;
-    return Math.floor(gameState.grain / gameState.landPrice);
+    return Math.floor(gameState.rice / gameState.landPrice);
   };
 
   const getMaxSellAcres = () => {
     return gameState.land;
   };
 
-  const getMaxFeedBushels = () => {
-    return gameState.grain;
+  const getMaxFeedBags = () => {
+    return gameState.rice;
   };
 
   const getMaxPlantAcres = () => {
-    const grainLimit = gameState.grain * 2; // 1 bushel per 2 acres
+    const riceLimit = gameState.rice * 2; // 1 bag per 2 acres
     const peopleLimit = gameState.population * 10; // 1 person per 10 acres
-    return Math.min(gameState.land, grainLimit, peopleLimit);
+    return Math.min(gameState.land, riceLimit, peopleLimit);
   };
 
   const renderInput = () => {
@@ -364,10 +368,10 @@ export default function Home() {
       return (
         <ActionInput
           step="buy"
-          maxValue={gameState.grain}
+          maxValue={gameState.rice}
           constraints={{
             maxAcres: getMaxSellAcres(),
-            maxBushels: gameState.landPrice,
+            maxBags: gameState.landPrice,
           }}
           onSubmit={handleBuyAcres}
         />
@@ -378,7 +382,7 @@ export default function Home() {
       return (
         <ActionInput
           step="feed"
-          maxValue={getMaxFeedBushels()}
+          maxValue={getMaxFeedBags()}
           onSubmit={handleFeedPopulation}
         />
       );
@@ -390,7 +394,7 @@ export default function Home() {
           step="plant"
           maxValue={getMaxPlantAcres()}
           constraints={{
-            maxBushels: gameState.grain,
+            maxBags: gameState.rice,
             peopleAvailable: gameState.population,
           }}
           onSubmit={handlePlantAcres}
@@ -408,7 +412,7 @@ export default function Home() {
           year={gameState.year}
           population={gameState.population}
           land={gameState.land}
-          grain={gameState.grain}
+          rice={gameState.rice}
           landPrice={gameState.landPrice}
         />
         <TerminalLog messages={gameState.messages} />
