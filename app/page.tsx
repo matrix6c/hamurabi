@@ -418,7 +418,7 @@ export default function Home() {
         <TerminalLog messages={gameState.messages} />
         {renderInput()}
         <div className="p-2 text-[10px] text-white/70 text-center font-mono uppercase tracking-widest border-t border-white/10">
-          Try not to kill everyone 🤞. -Muhammed
+          {gameState.population === 0 ? "welldone 💀. -Muhammed" : "Try not to kill everyone 🤞. -Muhammed"}
         </div>
       </div>
     </div>
