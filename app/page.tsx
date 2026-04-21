@@ -61,8 +61,9 @@ export default function Home() {
 
   const initializeGame = () => {
     const initialPrice = generateLandPrice();
-    const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou are the ruler of a city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nMake your decisions carefully!\n`;
-    const firstYearReport = `Hamurabi: I beg to report to you,\nIn year 1, 0 people starved,\n0 came to the city.\nPopulation is now 100.\nThe city now owns 1000 acres.\nHarvest was 0 bushels per acre.\nRats ate 0 bushels.\nLand is trading at ${initialPrice} bushels per acre.`;
+    const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou have been installed as ruler of this city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nMake your decisions carefully!\n`;
+    const yearBanner = `\n[#blue:          -- YEAR 1 --]\n`;
+    const setupMessage = `Land is trading at ${initialPrice} bushels per acre.`;
 
     setGameState({
       year: 1,
@@ -70,7 +71,7 @@ export default function Home() {
       land: 1000,
       grain: 2800,
       landPrice: initialPrice,
-      messages: [welcomeMessage, firstYearReport],
+      messages: [welcomeMessage, yearBanner, setupMessage],
       step: "buy",
       buyAcres: 0,
       feedBushels: 0,
@@ -85,11 +86,15 @@ export default function Home() {
   const startNewYear = () => {
     const newLandPrice = generateLandPrice();
     let stewardReport = "";
+    let yearBanner = "";
 
     if (gameState.previousYearResults) {
       const results = gameState.previousYearResults;
-      stewardReport = `\nHamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bushels per acre.\nRats ate ${results.ratsAte} bushels.\nLand is trading at ${newLandPrice} bushels per acre.`;
+      stewardReport = `\nHamurabi: I beg to report to you,\nIn year ${gameState.year}, ${results.starvationDeaths} people starved,\n${results.newPeople} came to the city.\nPopulation is now ${gameState.population}.\nThe city now owns ${gameState.land} acres.\nHarvest was ${results.harvestYield} bushels per acre.\nRats ate ${results.ratsAte} bushels.`;
+      yearBanner = `\n\n[#blue:          -- YEAR ${gameState.year + 1} --]\n`;
     }
+
+    const priceMessage = `Land is trading at ${newLandPrice} bushels per acre.`;
 
     setGameState((prev) => ({
       ...prev,
@@ -100,9 +105,12 @@ export default function Home() {
       feedBushels: 0,
       plantAcres: 0,
       startingPopulation: prev.population,
-      messages: stewardReport
-        ? [...prev.messages, stewardReport]
-        : prev.messages,
+      messages: [
+        ...prev.messages,
+        ...(stewardReport ? [stewardReport] : []),
+        ...(yearBanner ? [yearBanner] : []),
+        priceMessage,
+      ],
       previousYearResults: null,
     }));
   };
@@ -168,7 +176,7 @@ export default function Home() {
         const harvest = prev.plantAcres * harvestYield;
         newGrain += harvest;
         messages.push(
-          `\nHarvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.`,
+          `\n[#green:Harvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.]`,
         );
       }
 
@@ -179,7 +187,7 @@ export default function Home() {
         ratsAte = Math.floor(newGrain * percentEaten);
         newGrain -= ratsAte;
         messages.push(
-          `Rats ate ${ratsAte} bushels (${(percentEaten * 100).toFixed(1)}% of your grain).`,
+          `[#red:Rats ate ${ratsAte} bushels (${(percentEaten * 100).toFixed(1)}% of your grain).]`,
         );
       }
 
@@ -190,12 +198,12 @@ export default function Home() {
         newPopulation = prev.population - starvationDeaths;
         const deathPercentage = (starvationDeaths / prev.population) * 100;
 
-        messages.push(`${starvationDeaths} people died of starvation.`);
+        messages.push(`[#red:${starvationDeaths} people died of starvation.]`);
 
         if (deathPercentage > 45) {
-          messages.push(`\nYou have been impeached and thrown out of office!`);
+          messages.push(`\n[#red:You have been impeached and thrown out of office!]`);
           messages.push(
-            `You starved ${deathPercentage.toFixed(1)}% of the population in one year.`,
+            `[#red:You starved ${deathPercentage.toFixed(1)}% of the population in one year.]`,
           );
           return {
             ...prev,
@@ -215,8 +223,8 @@ export default function Home() {
       if (plagueChance <= 0.15) {
         plagueDeaths = Math.floor(newPopulation / 2);
         newPopulation -= plagueDeaths;
-        messages.push(`\nA horrible plague struck! Half the population died.`);
-        messages.push(`${plagueDeaths} people died from the plague.`);
+        messages.push(`\n[#red:A horrible plague struck! Half the population died.]`);
+        messages.push(`[#red:${plagueDeaths} people died from the plague.]`);
       }
 
       // New people arrive (simplified: 5-15 new people per year)

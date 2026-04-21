@@ -23,6 +23,8 @@ export default function TerminalLog({ messages }: TerminalLogProps) {
           blue: "text-blue-400 font-bold",
           amber: "text-amber-400 font-bold",
           emerald: "text-emerald-400 font-bold",
+          red: "text-red-500 font-bold",
+          green: "text-emerald-400 font-bold",
         }[color] || "";
         return <span key={i} className={colorClass}>{content}</span>;
       }
