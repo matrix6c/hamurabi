@@ -64,6 +64,7 @@ export default function Home() {
     const welcomeMessage = `=== HAMURABI ===\n\nWelcome, O great Hamurabi!\nYou have been installed as ruler of this city-state.\nYour goal is to manage your resources wisely over 10 years.\n\nMake your decisions carefully!\n`;
     const yearBanner = `\n[#blue:          -- YEAR 1 --]\n`;
     const setupMessage = `Land is trading at ${initialPrice} bags per acre.`;
+    const initialReport = `\nHamurabi: I beg to report to you,\nPopulation is now 100.\nThe city now owns 1000 acres.\nYou have 2800 bags of rice.`;
 
     setGameState({
       year: 1,
@@ -71,7 +72,7 @@ export default function Home() {
       land: 1000,
       rice: 2800,
       landPrice: initialPrice,
-      messages: [welcomeMessage, yearBanner, setupMessage],
+      messages: [welcomeMessage, initialReport, yearBanner, setupMessage],
       step: "buy",
       buyAcres: 0,
       feedBags: 0,
