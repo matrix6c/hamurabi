@@ -163,12 +163,14 @@ export default function Home() {
       const messages: string[] = [];
 
       // Calculate harvest FIRST (before rats)
-      // if (prev.plantAcres > 0) {
-      //   harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bushels per acre
-      //   const harvest = prev.plantAcres * harvestYield;
-      //   newGrain += harvest;
-      //   messages.push(`\nHarvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.`);
-      // }
+      if (prev.plantAcres > 0) {
+        harvestYield = Math.floor(Math.random() * 5) + 1; // 1-5 bushels per acre
+        const harvest = prev.plantAcres * harvestYield;
+        newGrain += harvest;
+        messages.push(
+          `\nHarvest: ${harvestYield} bushels per acre. Total: ${harvest} bushels.`,
+        );
+      }
 
       // Rats (10-30% chance to eat 10-20% of stored grain)
       const ratChance = Math.random();
@@ -181,32 +183,32 @@ export default function Home() {
         );
       }
 
-      // // Calculate starvation
-      // const peopleFed = Math.floor(prev.feedBushels / 20);
-      // if (peopleFed < prev.population) {
-      //   starvationDeaths = prev.population - peopleFed;
-      //   newPopulation = prev.population - starvationDeaths;
-      //   const deathPercentage = (starvationDeaths / prev.population) * 100;
+      // Calculate starvation
+      const peopleFed = Math.floor(prev.feedBushels / 20);
+      if (peopleFed < prev.population) {
+        starvationDeaths = prev.population - peopleFed;
+        newPopulation = prev.population - starvationDeaths;
+        const deathPercentage = (starvationDeaths / prev.population) * 100;
 
-      //   messages.push(`${starvationDeaths} people died of starvation.`);
+        messages.push(`${starvationDeaths} people died of starvation.`);
 
-      //   if (deathPercentage > 45) {
-      //     messages.push(`\nYou have been impeached and thrown out of office!`);
-      //     messages.push(
-      //       `You starved ${deathPercentage.toFixed(1)}% of the population in one year.`,
-      //     );
-      //     return {
-      //       ...prev,
-      //       population: newPopulation,
-      //       messages: [...prev.messages, ...messages],
-      //       step: "gameover",
-      //       totalDeaths: prev.totalDeaths + starvationDeaths,
-      //       previousYearResults: null,
-      //     };
-      //   }
-      // } else {
-      //   messages.push(`\n> Everyone was fed.`);
-      // }
+        if (deathPercentage > 45) {
+          messages.push(`\nYou have been impeached and thrown out of office!`);
+          messages.push(
+            `You starved ${deathPercentage.toFixed(1)}% of the population in one year.`,
+          );
+          return {
+            ...prev,
+            population: newPopulation,
+            messages: [...prev.messages, ...messages],
+            step: "gameover",
+            totalDeaths: prev.totalDeaths + starvationDeaths,
+            previousYearResults: null,
+          };
+        }
+      } else {
+        messages.push(`\n> Everyone was fed.`);
+      }
 
       // Plague (15% chance) - happens after starvation
       const plagueChance = Math.random();
