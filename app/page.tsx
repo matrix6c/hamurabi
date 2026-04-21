@@ -129,7 +129,7 @@ export default function Home() {
       step: "feed",
       messages: [
         ...prev.messages,
-        `\n/ ******************************************* /\n> You ${acres >= 0 ? "bought" : "sold"} [#blue:${Math.abs(acres)}] acres ${acres >= 0 ? "for" : "and received"} [#blue:${Math.abs(cost)}] bags.`,
+        `\n/ *************** /\n> You ${acres >= 0 ? "bought" : "sold"} [#blue:${Math.abs(acres)}] acres ${acres >= 0 ? "for" : "and received"} [#blue:${Math.abs(cost)}] bags.`,
       ],
     }));
   };
@@ -416,7 +416,7 @@ export default function Home() {
           rice={gameState.rice}
           landPrice={gameState.landPrice}
         /> */}
-        <TerminalLog messages={gameState.messages} />
+        <TerminalLog messages={gameState.messages} initialMessageCount={4} />
         {renderInput()}
         <div className="p-2 text-[10px] text-white/70 text-center font-mono uppercase tracking-widest border-t border-white/10">
           {gameState.population === 0

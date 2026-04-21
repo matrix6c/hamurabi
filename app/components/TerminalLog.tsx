@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 
 interface TerminalLogProps {
   messages: string[];
+  initialMessageCount?: number;
 }
 
 const colorMap: Record<string, string> = {
@@ -19,9 +20,16 @@ interface MessageSegment {
   colorClass: string;
 }
 
-export default function TerminalLog({ messages }: TerminalLogProps) {
+export default function TerminalLog({ messages, initialMessageCount = 0 }: TerminalLogProps) {
   const logEndRef = useRef<HTMLDivElement>(null);
-  const [activeMessageIndex, setActiveMessageIndex] = useState(0);
+  const [activeMessageIndex, setActiveMessageIndex] = useState(initialMessageCount);
+
+  // Reset if messages are cleared or started over (like Play Again)
+  useEffect(() => {
+    if (messages.length <= initialMessageCount) {
+      setActiveMessageIndex(initialMessageCount);
+    }
+  }, [messages.length, initialMessageCount]);
 
   // Auto-scroll when new messages are added or while typing
   useEffect(() => {
